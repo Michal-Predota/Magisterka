@@ -23,6 +23,7 @@
 #include <TSystem.h>
 #ifndef __CLING__
 #include "Header.h"
+#include "Decay.h"
 
 #endif
 
@@ -54,6 +55,9 @@ public:
 class MinvAna : public Hal::TwoTrackAna {
   TH1D* fMinvNum;
   TH1D* fMinvDen;
+  TH1D* phi_pion;
+  TH1D* phi_proton;
+  
   FlowGenerator* fFlow;
 
 protected:
@@ -61,27 +65,56 @@ protected:
     auto report = Hal::TwoTrackAna::Report();
     report->AddObject(fMinvNum);
     report->AddObject(fMinvDen);
+    report->AddObject(phi_pion);
+    report->AddObject(phi_proton);
     return report;
   }
-
+  
   virtual void ProcessPair() {  // wywoływane dla każdej pary zwykłej
+	Double_t minv;
+	Double_t weight;
     TLorentzVector mom1 = fCurrentSignalPair->GetTrack1()->GetMomentum();
     TLorentzVector mom2 = fCurrentSignalPair->GetTrack2()->GetMomentum();
-    Double_t minv       = (mom1 + mom2).M();
-    Double_t weight     = fFlow->GenerateWeight(fCurrentSignalPair);
-    fMinvNum->Fill(minv, weight);
+	
+	if(mom1.M()>100&&mom1.M()<200&&mom2.M()>900)
+	{
+		minv       = (mom1 + mom2).M();
+		weight     = fFlow->GenerateWeight(fCurrentSignalPair);
+	
+		fMinvNum->Fill(minv, weight);
+		phi_pion->Fill(fCurrentSignalPair->GetTrack1()->GetMomentum().Phi());
+		phi_proton->Fill(fCurrentSignalPair->GetTrack2()->GetMomentum().Phi());
+	}
+	
+	
+//	std::cout<<fCurrentSignalPair->GetTrack1()->GetMomentum().M()<<"	"<<fCurrentSignalPair->GetTrack2()->GetMomentum().M()<<std::endl;
+	
+	
   }
+  
+  
   virtual void ProcessPair_Perfect() {  // wywoływane dla każdej zwykłej (ale bez wag od flow)
+	Double_t minv;
+	Double_t weight;
     TLorentzVector mom1 = fCurrentBackgroundPair->GetTrack1()->GetMomentum();
     TLorentzVector mom2 = fCurrentBackgroundPair->GetTrack2()->GetMomentum();
-    Double_t minv       = (mom1 + mom2).M();
-    fMinvDen->Fill(minv);
+	
+	if(mom1.M()>100&&mom1.M()<200&&mom2.M()>900)
+	{
+		minv       = (mom1 + mom2).M();
+		weight     = fFlow->GenerateWeight(fCurrentSignalPair);
+	
+		fMinvDen->Fill(minv);
+	}
+	
   }
 
 public:
   MinvAna(Int_t bins, Double_t min, Double_t max) : fFlow(nullptr) {
-    fMinvNum = new TH1D("num", "num:m_{Inv} [GeV/c];N", bins, min, max);
-    fMinvDen = new TH1D("den", "den;m_{Inv} [GeV/c];N", bins, min, max);
+    fMinvNum = new TH1D("num", "num:m_{Inv} [MeV/c];m", bins, min, max);
+    fMinvDen = new TH1D("den", "den;m_{Inv} [MeV/c];m", bins, min, max);
+	phi_pion = new TH1D("phi pion", "phi, pion", 100, -2*TMath::Pi(), 2*TMath::Pi());
+	phi_proton = new TH1D("phi proton", "phi, proton", 100, -2*TMath::Pi(), 2*TMath::Pi());
   };
   void SetWeight(FlowGenerator* flow) { fFlow = flow; }
   virtual ~MinvAna() {};
@@ -91,37 +124,45 @@ public:
 void minflow() {
   gStyle->SetPalette(kRainBow);
   Hal::AnalysisManager* run = new Hal::AnalysisManager();
-  HalOTF::Source* source    = new HalOTF::Source(1000);
+  HalOTF::Source* source    = new HalOTF::Source(10000);
   /**wczytywanie spektr i ich ustawianie**/
-  TString path = "spec_pim.root";
+  TString path = "spec_pip.root";
   TFile* fx    = new TFile(path);
   TFile *fp = new TFile("spec_p.root");
   
   auto w       = new FlowGenerator();
   w->SetFlow(0.4);
-  TH2D* h                = (TH2D*) fx->Get("HALpim");
+  TH2D* h                = (TH2D*) fx->Get("HALpip");
   TH2D *hp = (TH2D*) fp->Get("HALp");
+  
+  
+ 
+  
+  
   
   HalOTF::Reader* reader = new HalOTF::Reader();
   reader->SetSpiecies(*hp, 2212, 100);
   run->SetSource(source);
   run->AddTask(reader);
+  
   reader = new HalOTF::Reader();
-  reader->SetSpiecies(*h, -211, 100);
+  reader->SetSpiecies(*h, 211, 100);
   run->AddTask(reader);
   // analiza
-  MinvAna* ana = new MinvAna(200, 0, 4);
+  MinvAna* ana = new MinvAna(500, 1000, 1500);
   ana->SetFormat(new HalOTF::ComplexEvent());
 
 
-  // ustawiam ciecia na 2 rodzaje czastek
   Hal::TrackPdgCut pid1, pid2;
   pid1.SetValue(2212);
-  pid2.SetValue(-211);
+  pid2.SetValue(211);
   ana->AddCut(pid1, "{0}");
   ana->AddCut(pid2, "{1}");
-  // to musze odblokować inaczej program zignouje drugi zestaw czastek
+  
   ana->EnableNonIdentical();
+  
+  ana->SetOption("id");
+  
 
   ana->SetWeight(w);
   ana->SetOption(Hal::TwoTrackAna::BackgroundOptionPerfect());
