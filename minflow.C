@@ -70,13 +70,13 @@ protected:
     return report;
   }
   
-  virtual void ProcessPair() {  // wywoływane dla każdej pary zwykłej
+ virtual void ProcessPair() {  // wywoływane dla każdej pary zwykłej
 	Double_t minv;
 	Double_t weight;
     TLorentzVector mom1 = fCurrentSignalPair->GetTrack1()->GetMomentum();
     TLorentzVector mom2 = fCurrentSignalPair->GetTrack2()->GetMomentum();
 	
-	if(mom1.M()>100&&mom1.M()<200&&mom2.M()>900)
+	if((mom1.M()>100&&mom1.M()<200&&mom2.M()>900) || (mom2.M()>900&&mom1.M()<200&&mom1.M()>100))
 	{
 		minv       = (mom1 + mom2).M();
 		weight     = fFlow->GenerateWeight(fCurrentSignalPair);
@@ -85,10 +85,6 @@ protected:
 		phi_pion->Fill(fCurrentSignalPair->GetTrack1()->GetMomentum().Phi());
 		phi_proton->Fill(fCurrentSignalPair->GetTrack2()->GetMomentum().Phi());
 	}
-	
-	
-//	std::cout<<fCurrentSignalPair->GetTrack1()->GetMomentum().M()<<"	"<<fCurrentSignalPair->GetTrack2()->GetMomentum().M()<<std::endl;
-	
 	
   }
   
@@ -99,9 +95,11 @@ protected:
     TLorentzVector mom1 = fCurrentBackgroundPair->GetTrack1()->GetMomentum();
     TLorentzVector mom2 = fCurrentBackgroundPair->GetTrack2()->GetMomentum();
 	
-	if(mom1.M()>100&&mom1.M()<200&&mom2.M()>900)
+	if((mom1.M()>100&&mom1.M()<200&&mom2.M()>900 )|| (mom2.M()>900&&mom1.M()<200&&mom1.M()>100))
 	{
 		minv       = (mom1 + mom2).M();
+		
+		//std::cout<<minv<<std::endl;
 		weight     = fFlow->GenerateWeight(fCurrentSignalPair);
 	
 		fMinvDen->Fill(minv);
@@ -124,7 +122,7 @@ public:
 void minflow() {
   gStyle->SetPalette(kRainBow);
   Hal::AnalysisManager* run = new Hal::AnalysisManager();
-  HalOTF::Source* source    = new HalOTF::Source(10000);
+  HalOTF::Source* source    = new HalOTF::Source(2000);
   /**wczytywanie spektr i ich ustawianie**/
   TString path = "spec_pip.root";
   TFile* fx    = new TFile(path);
@@ -149,19 +147,18 @@ void minflow() {
   reader->SetSpiecies(*h, 211, 100);
   run->AddTask(reader);
   // analiza
-  MinvAna* ana = new MinvAna(500, 1000, 1500);
+  MinvAna* ana = new MinvAna(300, 900, 1800);
   ana->SetFormat(new HalOTF::ComplexEvent());
 
 
   Hal::TrackPdgCut pid1, pid2;
-  pid1.SetValue(2212);
-  pid2.SetValue(211);
+  pid1.SetMinAndMax(2212);
+  pid2.SetMinAndMax(211);
   ana->AddCut(pid1, "{0}");
   ana->AddCut(pid2, "{1}");
   
   ana->EnableNonIdentical();
   
-  ana->SetOption("id");
   
 
   ana->SetWeight(w);

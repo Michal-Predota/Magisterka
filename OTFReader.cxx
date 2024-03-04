@@ -77,9 +77,19 @@ namespace HalOTF {
   
   
   
-	int n_deltas=0;
+  
+  
+	
+TH1D* dau = new TH1D("dau","dau",500,1000,1800);
+
   void Reader::Exec(Option_t* /*opt*/) {
 	  
+TF1* curve = new TF1("curve", "1+2*[0]*TMath::Cos(x)", -TMath::Pi(), TMath::Pi());
+TF1* breit_wigner = new TF1("breit_wigner", "[0]*(x*x*0.117)/(TMath::Power((1.232*1.232-x*x), 2)+(x*x*0.117*0.117))", 0, 2);
+breit_wigner->SetParameter(0, 1);
+double norm = breit_wigner->Integral(0, 2);
+breit_wigner->SetParameter(0, 1/norm);
+
 	  
     PrepareTables();
     Int_t shift = fMcEvent->GetNTracks();
@@ -87,14 +97,10 @@ namespace HalOTF {
 	
 	int tmp=0;
 	int i=0;
+	int which=0;
 	
 	
-	TF1* curve = new TF1("curve", "1+2*[0]*TMath::Cos(x)", -TMath::Pi(), TMath::Pi());
 	
-	TF1* breit_wigner = new TF1("breit_wigner", "[0]*(x*x*0.117)/(TMath::Power((1.232*1.232-x*x), 2)+(x*x*0.117*0.117))", 0, 2000);
-	breit_wigner->SetParameter(0, 1);
-	double norm = breit_wigner->Integral(0, 2000);
-	breit_wigner->SetParameter(0, 1/norm);
 	
 	
 	while(i<fMultiplicity)
@@ -158,7 +164,7 @@ namespace HalOTF {
 			py         = py + gRandom->Gaus(0, fSmear) * py;
 			pz         = pz + gRandom->Gaus(0, fSmear) * pz;
 			Double_t e = TMath::Sqrt(px * px + py * py + pz * pz + fMass * fMass);
-			rtr.SetMom(px*1000, py*1000, pz*1000, e*1000);
+			rtr.SetMom(px, py, pz, e);
 			
 			//std::cout<<"c"<<TLorentzVector(px, py, pz, e).M()<<std::endl;
 			
@@ -182,57 +188,75 @@ namespace HalOTF {
 		}
 		Hal::McTrack Delta;
 		
+	int n_deltas=0;
 		
-	while(n_deltas<1000)
+	while(n_deltas<5)
 	{
 		Double_t px = gRandom->Gaus(0, 0.5);
 		Double_t py = gRandom->Gaus(0, 0.5);
 		Double_t pz = gRandom->Gaus(0, 0.5);
 		TLorentzVector sum;
-		sum.SetXYZM(px, py, pz, breit_wigner->GetRandom());
+		double m = breit_wigner->GetRandom();
+		sum.SetXYZM(px, py, pz, m);
 		Delta.SetMomentum(px, py, pz, sum.E());
-		decay.DecayParticle(Delta, tracks);
+		decay.DecayParticle(Delta, tracks, false, m);
 		
-		
+		if(TMath::IsNaN(tracks[0]->GetMomentum().M())||TMath::IsNaN(tracks[1]->GetMomentum().M()))
+			continue;
 	
-		OTF::McTrack tr1, tr2;
-		
-		TLorentzVector p1, p2;
-		p1.SetXYZM(tracks[0]->GetMomentum().Px()*1000, tracks[0]->GetMomentum().Py()*1000, tracks[0]->GetMomentum().Pz()*1000, tracks[0]->GetMomentum().M()*1000);
-		tr1.SetMomentum(p1);
-		tr1.SetPdgCode(2212);
-		TLorentzVector xr1(gRandom->Gaus(0, 1), gRandom->Gaus(0, 1), gRandom->Gaus(0), 0);
-		tr1.SetFreezout(xr1);
-		fMcEvent->AddTrack(tr1);
+		else{
+			OTF::McTrack tr1, tr2;
+			
+			
+			double e1 = TMath::Sqrt(tracks[0]->GetMomentum().Px()*1000 * tracks[0]->GetMomentum().Px()*1000 + tracks[0]->GetMomentum().Py()*1000 * tracks[0]->GetMomentum().Py()*1000 + tracks[0]->GetMomentum().Pz()*1000 * tracks[0]->GetMomentum().Pz()*1000 + tracks[0]->GetMomentum().M()*1000 * tracks[0]->GetMomentum().M()*1000);
+			double e2 = TMath::Sqrt(tracks[1]->GetMomentum().Px()*1000 * tracks[1]->GetMomentum().Px()*1000 + tracks[1]->GetMomentum().Py()*1000 * tracks[1]->GetMomentum().Py()*1000 + tracks[1]->GetMomentum().Pz()*1000 * tracks[1]->GetMomentum().Pz()*1000 + tracks[1]->GetMomentum().M()*1000 * tracks[1]->GetMomentum().M()*1000);
+			
 		
 		
-		
-		p2.SetXYZM(tracks[1]->GetMomentum().Px()*1000, tracks[1]->GetMomentum().Py()*1000, tracks[1]->GetMomentum().Pz()*1000, tracks[1]->GetMomentum().M()*1000);
-		tr2.SetMomentum(p1);
-		tr2.SetPdgCode(211);
-		TLorentzVector xr2(gRandom->Gaus(0, 1), gRandom->Gaus(0, 1), gRandom->Gaus(0), 0);
-		tr2.SetFreezout(xr2);
-		fMcEvent->AddTrack(tr2);
+			TLorentzVector p1, p2;
+			p1.SetXYZM(tracks[0]->GetMomentum().Px()*1000, tracks[0]->GetMomentum().Py()*1000, tracks[0]->GetMomentum().Pz()*1000, e1);
+			tr1.SetMomentum(p1);
+			tr1.SetPdgCode(2212);
+			TLorentzVector xr1(gRandom->Gaus(0, 1), gRandom->Gaus(0, 1), gRandom->Gaus(0), 0);
+			tr1.SetFreezout(xr1);
+			fMcEvent->AddTrack(tr1);
 		
 		
 		
-		OTF::RecoTrack rtr1, rtr2;
-		rtr1.SetMom(tracks[0]->GetMomentum()*1000);
-		//std::cout<<"a"<<(tracks[0]->GetMomentum()*1000).M()<<std::endl;
-		rtr1.SetNHits(5);
-		rtr1.SetCharge(fCharge);
-		rtr1.SetMcIndex(n_deltas + tmp);
-		n_deltas++;
-		fRecoEvent->AddTrack(rtr1);
+			p2.SetXYZM(tracks[1]->GetMomentum().Px()*1000, tracks[1]->GetMomentum().Py()*1000, tracks[1]->GetMomentum().Pz()*1000, e2);
+			tr2.SetMomentum(p1);
+			tr2.SetPdgCode(211);
+			TLorentzVector xr2(gRandom->Gaus(0, 1), gRandom->Gaus(0, 1), gRandom->Gaus(0), 0);
+			tr2.SetFreezout(xr2);
+			fMcEvent->AddTrack(tr2);
 		
-		rtr2.SetMom(tracks[1]->GetMomentum()*1000);
-		//std::cout<<"b"<<(tracks[1]->GetMomentum()*1000).M()<<std::endl;
-		rtr2.SetNHits(5);
-		rtr2.SetCharge(fCharge);
-		rtr2.SetMcIndex(n_deltas + tmp);
-		fRecoEvent->AddTrack(rtr2);
-		//std::cout<<n_deltas<<std::endl;
+		
+			OTF::RecoTrack rtr1, rtr2;
+			rtr1.SetMom(tracks[0]->GetMomentum()*1000);
+			//std::cout<<"a"<<(tracks[0]->GetMomentum()*1000).M()<<std::endl;
+			rtr1.SetNHits(5);
+			rtr1.SetCharge(fCharge);
+			rtr1.SetMcIndex(which + tmp);
+			which++;
+			fRecoEvent->AddTrack(rtr1);
+		
+			rtr2.SetMom(tracks[1]->GetMomentum()*1000);
+			//std::cout<<"b"<<(tracks[1]->GetMomentum()*1000).M()<<std::endl;
+			rtr2.SetNHits(5);
+			rtr2.SetCharge(fCharge);
+			rtr2.SetMcIndex(which + tmp);
+			fRecoEvent->AddTrack(rtr2);
+			//std::cout<<n_deltas<<std::endl;
+			n_deltas++;
+		
+			//std::cout<<((tracks[0]->GetMomentum()+tracks[1]->GetMomentum()).M()*1000)<<std::endl;
+		
+			//dau->Fill((tr1.GetMomentum()+tr2.GetMomentum()).M());
+		}
 	}
+	
+	//dau->SaveAs("/mnt/c/Users/bumcy/Desktop/dau.root");
+	
   }
 
   Reader::~Reader() {
