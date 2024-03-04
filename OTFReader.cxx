@@ -163,7 +163,7 @@ breit_wigner->SetParameter(0, 1/norm);
 			px         = px + gRandom->Gaus(0, fSmear) * px;
 			py         = py + gRandom->Gaus(0, fSmear) * py;
 			pz         = pz + gRandom->Gaus(0, fSmear) * pz;
-			Double_t e = TMath::Sqrt(px * px + py * py + pz * pz + fMass * fMass);
+			Double_t e = TMath::Sqrt(px * px + py * py + pz * pz + fMass * fMass*1000*1000);
 			rtr.SetMom(px, py, pz, e);
 			
 			//std::cout<<"c"<<TLorentzVector(px, py, pz, e).M()<<std::endl;
@@ -190,7 +190,7 @@ breit_wigner->SetParameter(0, 1/norm);
 		
 	int n_deltas=0;
 		
-	while(n_deltas<5)
+	while(n_deltas<2)
 	{
 		Double_t px = gRandom->Gaus(0, 0.5);
 		Double_t py = gRandom->Gaus(0, 0.5);
