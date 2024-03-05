@@ -97,7 +97,7 @@ breit_wigner->SetParameter(0, 1/norm);
 	
 	int tmp=0;
 	int i=0;
-	int which=0;
+	int which=1;
 	
 	
 	
@@ -190,7 +190,7 @@ breit_wigner->SetParameter(0, 1/norm);
 		
 	int n_deltas=0;
 		
-	while(n_deltas<2)
+	while(n_deltas<20)
 	{
 		Double_t px = gRandom->Gaus(0, 0.5);
 		Double_t py = gRandom->Gaus(0, 0.5);
@@ -248,10 +248,12 @@ breit_wigner->SetParameter(0, 1/norm);
 			fRecoEvent->AddTrack(rtr2);
 			//std::cout<<n_deltas<<std::endl;
 			n_deltas++;
+			
+			tmp=tmp+which;
 		
 			//std::cout<<((tracks[0]->GetMomentum()+tracks[1]->GetMomentum()).M()*1000)<<std::endl;
-		
-			//dau->Fill((tr1.GetMomentum()+tr2.GetMomentum()).M());
+			
+			
 		}
 	}
 	
