@@ -31,6 +31,8 @@
 
 #include <TRandom.h>
 
+#include <vector>
+
 namespace HalOTF {
   Reader::Reader() :
     fSpectras(nullptr),
@@ -79,25 +81,69 @@ namespace HalOTF {
   
   
   
+void set_curve_params(double pt, int i, TF1* fun, std::vector<double> lim, std::vector<double> val)
+{
+	//std::cout<<lim.size()<<"	"<<val.size()<<std::endl;
+	for(int j=0; j<lim.size(); j++)
+	{
+		if(pt<lim.at(j))
+		{
+			fun->SetParameter(i, val.at(j));
+			//std::cout<<i<<"	"<<j<<"	"<<val.at(j)<<std::endl;
+			//std::cout<<pt<<"	"<<lim.at(j)<<std::endl;
+			break;
+		}
+	}
+}
+
+  
 	
 TH1D* dau = new TH1D("dau","dau",500,1000,1800);
 
-  void Reader::Exec(Option_t* /*opt*/) {
+void Reader::Exec(Option_t* /*opt*/) {
 	  
-TF1* curve = new TF1("curve", "1+2*[0]*TMath::Cos(x)", -TMath::Pi(), TMath::Pi());
+TF1* curve = new TF1("curve", "1+2*[0]*TMath::Cos(x)+2*[1]*TMath::Cos(2*x)+2*[2]*TMath::Cos(3*x)+2*[3]*TMath::Cos(4*x)", -TMath::Pi(), TMath::Pi());
 TF1* breit_wigner = new TF1("breit_wigner", "[0]*(x*x*0.117)/(TMath::Power((1.232*1.232-x*x), 2)+(x*x*0.117*0.117))", 0, 2);
 breit_wigner->SetParameter(0, 1);
 double norm = breit_wigner->Integral(0, 2);
 breit_wigner->SetParameter(0, 1/norm);
+
+std::vector<double> v1_lim = {0.22083, 0.272916, 0.32083, 0.36875, 0.41875,0.46875,0.51875,0.56,0.614583,0.664583,0.714583,0.7625,0.810416,0.860416,0.9083,0.960417,1.00625,1.0541, 1.1041, 1.15625,1.2083, 1.25416,1.3,
+1.352083,1.402083,1.447916,1.497916,1.54583,1.597916,1.64375,1.69583,1.7416,1.797916,1.839583,1.8916,1.939583};
+
+std::vector<double> v1_val = {-0.0574,-0.0744,-0.08510,-0.0978,-0.1085,-0.1191,-0.1191,-0.1361,-0.1361,-0.1425,-0.1446,-0.1510,-0.1553,-0.1617,-0.1638,-0.1659,-0.1680,-0.1702,-0.1744,-0.1787,-0.1787,-0.1808,-0.1851,
+-0.1851,-0.1914,-0.1957,-0.1957,-0.2,-0.2,-0.2085,-0.2127,-0.2191,-0.2127,-0.2255,-0.2340};
+
+
+std::vector<double> v2_lim = {0.2752,0.3268,0.3763,0.4279,0.4752,0.5247,0.5806,0.6279,0.6752,0.7290,0.7741,0.8258,0.8752,0.9290,0.9806,1.0279,1.0752,1.1268,1.1763,1.2279,1.2752,1.3311,1.3806,1.4258,1.4774,1.5225,1.5741,1.6279,
+1.6752,1.7225,1.7806,1.8279,1.8752,1.9247,1.9741};
+
+std::vector<double> v2_val = {-0.0256,-0.0330,-0.0422,-0.0504,-0.0568,-0.0660,-0.0779,-0.0899,-0.0981,-0.1128,-0.1256,-0.1366,-0.1486,-0.1623,-0.1733,-0.1834,-0.1954,-0.2027,-0.2100,-0.2165,-0.2220,-0.2275,-0.2339,-0.2394,
+-0.2403,-0.2467,-0.2440,-0.2504,-0.2541,-0.2550,-0.2587,-0.2623,-0.2587,-0.2596,-0.2688};
+
+
+std::vector<double> v3_lim = {0.2244,0.2734,0.3183,0.3693,0.4183,0.4653,0.5142,0.5591,0.6163,0.6591,0.7081,0.7612,0.8081,0.8571,0.9061,0.9571,1.0061,1.0551,1.0979,1.1489,1.2,1.2489,1.2979,1.3448,1.3979,1.4387,1.4959,1.5408,
+1.5897,1.6408,1.6857,1.7387,1.7836,1.8326,1.8836,1.9367};
+
+std::vector<double> v3_val = {-0.0006,0.0019,0.0035,0.0041,0.0064,0.0083,0.0103,0.0122,0.0145,0.0177,0.0190,0.0225,0.0254,0.0280,0.0322,0.0345,0.0377,0.0419,0.0441,0.0483,0.0490,0.0512,0.0577,0.0583,0.0593,0.0593,0.0654,0.0619,
+0.0709,0.0683,0.0777,0.0835,0.0683,0.0858,0.0796,0.0735};
+
+
+std::vector<double> v4_lim = {0.2458,0.34583,0.45,0.5458,0.6479,0.7479,0.8458,0.9437,1.0437,1.1458,1.2395,1.3437,1.4395,1.5395,1.6416,1.7375,1.8395,1.9375};
+
+std::vector<double> v4_val = {0,0.0017,0.0028,0.0033,0.0058,0.0073,0.0089,0.0133,0.015,0.0185,0.0219,0.0251,0.0228,0.0216,0.0292,0.0342,0.0344, 0.0337};
+
+
+
+	int tmp=0;
+	int i=0;
+	int which=1;
 
 	  
     PrepareTables();
     Int_t shift = fMcEvent->GetNTracks();
 	
 	
-	int tmp=0;
-	int i=0;
-	int which=1;
 	
 	
 	
@@ -112,9 +158,8 @@ breit_wigner->SetParameter(0, 1/norm);
 		Double_t pt, y;
 		fSpectras->GetRandom2(y, pt);
 	
-		//std::cout<<pt/1000<<std::endl;
 		
-		if(pt/1000<=0.2)
+	/*	if(pt/1000<=0.2)
 			curve->SetParameter(0, -0.05);
 		else if(0.2<pt/1000<=0.25)
 			curve->SetParameter(0, -0.075);
@@ -130,16 +175,19 @@ breit_wigner->SetParameter(0, 1/norm);
 			curve->SetParameter(0, -0.15);
 		else
 			curve->SetParameter(0, -0.2);
+	*/	
 		
+		set_curve_params(pt/1000, 0, curve, v1_lim, v1_val);
+		set_curve_params(pt/1000, 1, curve, v2_lim, v2_val);
+		set_curve_params(pt/1000, 2, curve, v3_lim, v3_val);
+		set_curve_params(pt/1000, 3, curve, v4_lim, v4_val);
 		
 		
 		
 		
 		Double_t phi = gRandom->Uniform(-TMath::Pi(), TMath::Pi());
-		Double_t check = gRandom->Uniform(0, 1);
+		Double_t check = gRandom->Uniform(0, curve->GetMaximum());
 		
-		//std::cout<<check<<"	"<<curve->Eval(phi)<<"	"<<curve->GetParameter(0)<<std::endl;
-
 	
 		if(check<curve->Eval(phi))
 		{
@@ -190,7 +238,7 @@ breit_wigner->SetParameter(0, 1/norm);
 		
 	int n_deltas=0;
 		
-	while(n_deltas<20)
+	while(n_deltas<2)
 	{
 		Double_t px = gRandom->Gaus(0, 0.5);
 		Double_t py = gRandom->Gaus(0, 0.5);
@@ -207,10 +255,8 @@ breit_wigner->SetParameter(0, 1/norm);
 		else{
 			OTF::McTrack tr1, tr2;
 			
-			
 			double e1 = TMath::Sqrt(tracks[0]->GetMomentum().Px()*1000 * tracks[0]->GetMomentum().Px()*1000 + tracks[0]->GetMomentum().Py()*1000 * tracks[0]->GetMomentum().Py()*1000 + tracks[0]->GetMomentum().Pz()*1000 * tracks[0]->GetMomentum().Pz()*1000 + tracks[0]->GetMomentum().M()*1000 * tracks[0]->GetMomentum().M()*1000);
 			double e2 = TMath::Sqrt(tracks[1]->GetMomentum().Px()*1000 * tracks[1]->GetMomentum().Px()*1000 + tracks[1]->GetMomentum().Py()*1000 * tracks[1]->GetMomentum().Py()*1000 + tracks[1]->GetMomentum().Pz()*1000 * tracks[1]->GetMomentum().Pz()*1000 + tracks[1]->GetMomentum().M()*1000 * tracks[1]->GetMomentum().M()*1000);
-			
 		
 		
 			TLorentzVector p1, p2;
@@ -247,13 +293,12 @@ breit_wigner->SetParameter(0, 1/norm);
 			rtr2.SetMcIndex(which + tmp);
 			fRecoEvent->AddTrack(rtr2);
 			//std::cout<<n_deltas<<std::endl;
-			n_deltas++;
 			
+			
+			n_deltas++;
 			tmp=tmp+which;
 		
-			//std::cout<<((tracks[0]->GetMomentum()+tracks[1]->GetMomentum()).M()*1000)<<std::endl;
-			
-			
+			//std::cout<<((tracks[0]->GetMomentum()+tracks[1]->GetMomentum()).M()*1000)<<std::endl;	
 		}
 	}
 	
