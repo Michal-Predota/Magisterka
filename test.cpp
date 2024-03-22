@@ -15,7 +15,7 @@ int test()
 	//breit_wigner->SetParameter(0, 1/norm);
 	
 	
-	TH1D* h = new TH1D("h","h", 500, 0, 2000);
+	TH1D* h = new TH1D("h","h", 200, 0, 2000);
 	
 	
 	/*for(int i=0; i<10000; i++)
@@ -59,21 +59,90 @@ int test()
 		//std::cout<<"Delta mass: "<<m<<"	mass from tracks: "<<(tracks[0]->GetMomentum()+tracks[1]->GetMomentum()).M()<<std::endl;
 		n_deltas++;
 	}
+	*/
 	
-	TCanvas* c = new TCanvas("c","c",800,800);
+	
+	/*TCanvas* c = new TCanvas("c","c",800,800);
 	c->cd();
-	dau->Draw();*/
-	//breit_wigner->Draw("SAME");
 	
-	TFile* f1 = new TFile("deltas_noflow.root");
+	
+	
+	TFile* f1 = new TFile("e5000d2.root");
 	TFile* f2 = new TFile("nodeltas_noflow.root");
 	
 	TH1D* deltas = (TH1D*)f1->Get("den");
 	TH1D* nodeltas = (TH1D*)f2->Get("den");
 	
+	
+	norm = deltas->Integral(deltas->FindBin(1000), deltas->FindBin(1150))/nodeltas->Integral(deltas->FindBin(1000), deltas->FindBin(1150));
+	std::cout<<deltas->Integral(deltas->FindBin(1100), deltas->FindBin(1150))<<std::endl;
+	
+	nodeltas->Scale(norm);
+	//deltas->Draw();
+	//nodeltas->SetLineColor(kRed);
+	//nodeltas->Draw("SAME");
+	
+	
 	deltas->Add(nodeltas, -1);
+	deltas->Draw();*/
+	
+	
+	
+	TCanvas* c = new TCanvas("c","c",800,800);
+	c->cd();
+	
+	TFile* f1 = new TFile("analysis_pim.root");
+	TH1D* experimental = (TH1D*)f1->Get("#pi^{-} p");
+	experimental->Sumw2(false);
+	//experimental->SetBins(1000, 1000, 2500);
+	
+	
+	//minvhal.root - 30k events
+	int nEvents = 10000;
+	TFile* f2 = new TFile("minvhal_pip_1500bin.root");
+	TH1D* hal = (TH1D*)f2->Get("num");
+	hal->SetLineColor(kRed);
+	
+	
+	TFile* f3 = new TFile("analysis_pim_no_cut.root");
+	TH1D* experimental_nocut = (TH1D*)f3->Get("#pi^{-} p");
+	experimental_nocut->SetLineColor(kGreen);
+	//experimental_nocut->SetBins(1000, 1000, 2500);
+	
+	
+	
+	experimental->Scale(1/(experimental->Integral()));
+	experimental_nocut->Scale(1/(experimental_nocut->Integral()), "nosw2");
+	hal->Scale(1/(hal->Integral()));
+	
+	cout<<hal->GetNbinsX()<<"	"<<experimental->GetNbinsX()<<endl;
+	
+	cout<<hal->Integral()<<"	"<<experimental->Integral()<<endl;
 
-	deltas->Draw();
+	
+	//experimental->GetYaxis()->SetTitle("1/N dN/dm");
+	gPad->SetLeftMargin(0.15);
+	experimental->SetStats(000);
+	hal->SetStats(000);
+	
+	TLegend *legend = new TLegend(0.9,0.9,0.7,0.8);
+	legend->AddEntry(hal,"num", "l");
+	legend->AddEntry(experimental,"pim p", "l");
+	legend->AddEntry(experimental_nocut,"pim p no cuts", "l");
+	
+
+
+	//experimental_nocut->Draw();
+	//experimental->Draw("SAME");
+	//hal->Draw("SAME");
+	
+	experimental_nocut->Add(hal, -1);
+	experimental_nocut->Sumw2(false);
+	experimental_nocut->SetLineColor(kBlue);
+	
+	experimental_nocut->Draw();
+	
+	//legend->Draw();
 	
 	
 	return 0;
