@@ -28,6 +28,8 @@
 #include <TString.h>
 #include <TF1.h>
 #include <TVector.h>
+#include "TFile.h"
+#include "TH2D.h"
 
 #include <TRandom.h>
 
@@ -94,8 +96,13 @@ void set_curve_params(double pt, int i, TF1* fun, std::vector<double> lim, std::
 			break;
 		}
 	}
-}
+}	
 
+TFile* f1 = new TFile("protons_ratio.root");	
+TFile* f2 = new TFile("pions_ratio.root");
+	
+TH2D* ratio_p = (TH2D*)f1->Get("p_ratio");
+TH2D* ratio_pi = (TH2D*)f2->Get("pi_ratio"); 
   
 	
 TH1D* dau = new TH1D("dau","dau",500,1000,1800);
@@ -132,6 +139,16 @@ std::vector<double> v3_val = {-0.0006,0.0019,0.0035,0.0041,0.0064,0.0083,0.0103,
 std::vector<double> v4_lim = {0.2458,0.34583,0.45,0.5458,0.6479,0.7479,0.8458,0.9437,1.0437,1.1458,1.2395,1.3437,1.4395,1.5395,1.6416,1.7375,1.8395,1.9375};
 
 std::vector<double> v4_val = {0,0.0017,0.0028,0.0033,0.0058,0.0073,0.0089,0.0133,0.015,0.0185,0.0219,0.0251,0.0228,0.0216,0.0292,0.0342,0.0344, 0.0337};
+
+
+std::vector<double> v5_lim = {0.2474,0.3443,0.4391,0.536,0.6288,0.7319,0.8329,0.9278,1.0247,1.1237,1.2185,1.3237,1.4185,1.5154,1.6123,1.7072,1.8061};
+
+std::vector<double> v5_val = {0.0001,0.0002,-0.0007,-0.0001,-0.0014,-0.0004,-0.0018,-0.0022,-0.0034,-0.0043,-0.0030,-0.0128,-0.0043,-0.0162,-0.0079,-0.0409,-0.0144};
+
+
+std::vector<double> v6_lim = {0.2494,0.3483,0.4451,0.5354,0.6365,0.7419,0.8387,0.9397,1.0344,1.1333,1.2301,1.3333,1.4344,1.5311,1.6215,1.7247,1.8258};
+
+std::vector<double> v6_val = {0,0.0003,0.0001,-0.0009,-0.0016,-0.0010,-0.0014,-0.0051,0.0018,0.00447,-0.00447,-0.002,-0.0016,0.0197,0.0171,-0.040, 0.0440};
 
 
 
@@ -201,6 +218,18 @@ std::vector<double> v4_val = {0,0.0017,0.0028,0.0033,0.0058,0.0073,0.0089,0.0133
 			TLorentzVector p;
 			p.SetXYZM(px, py, pz, fMass);
 			p.Rotate(Psi, TVector3(1,1,1));
+			
+			//std::cout<<ratio_p->GetNbinsX()<<std::endl;
+			
+			/*if(fMass*1000<500)
+			{
+				p*(ratio_pi->GetBinContent(ratio_pi->FindBin(p.Rapidity(), p.Pt())));
+			}
+			if(fMass*1000>500)
+			{
+				p*(ratio_p->GetBinContent(ratio_p->FindBin(p.Rapidity(), p.Pt())));
+			}*/
+			
 			tr.SetMomentum(p);
 			tr.SetPdgCode(fPids);
 			TLorentzVector xr(gRandom->Gaus(0, 1), gRandom->Gaus(0, 1), gRandom->Gaus(0), 0);
@@ -226,7 +255,7 @@ std::vector<double> v4_val = {0,0.0017,0.0028,0.0033,0.0058,0.0073,0.0089,0.0133
 	}
 	
 	 //decay
-		Hal::DecayChannel ch1(2212, 211, 10);
+		Hal::DecayChannel ch1(2212, -211, 10);
 		Hal::Decay decay(2224);
 		decay.AddDecayChannel(ch1);
 		decay.Init();
@@ -261,24 +290,44 @@ std::vector<double> v4_val = {0,0.0017,0.0028,0.0033,0.0058,0.0073,0.0089,0.0133
 		
 			TLorentzVector p1, p2;
 			p1.SetXYZM(tracks[0]->GetMomentum().Px()*1000, tracks[0]->GetMomentum().Py()*1000, tracks[0]->GetMomentum().Pz()*1000, e1);
-			tr1.SetMomentum(p1);
+		
+			p2.SetXYZM(tracks[1]->GetMomentum().Px()*1000, tracks[1]->GetMomentum().Py()*1000, tracks[1]->GetMomentum().Pz()*1000, e2);
+			
+			
+			/*if(p1.M()*1000<500)
+			{
+				p1*(ratio_pi->GetBinContent(ratio_pi->FindBin(p1.Rapidity(), p1.Pt())));
+			}
+			if(p1.M()*1000>500)
+			{
+				p1*(ratio_p->GetBinContent(ratio_p->FindBin(p1.Rapidity(), p1.Pt())));
+			}
+			
+			
+			if(p2.M()*1000<500)
+			{
+				p2*(ratio_pi->GetBinContent(ratio_pi->FindBin(p2.Rapidity(), p2.Pt())));
+			}
+			if(p2.M()*1000>500)
+			{
+				p2*(ratio_p->GetBinContent(ratio_p->FindBin(p2.Rapidity(), p2.Pt())));
+			}*/
+			
+			tr1.SetMomentum(p2);
 			tr1.SetPdgCode(2212);
 			TLorentzVector xr1(gRandom->Gaus(0, 1), gRandom->Gaus(0, 1), gRandom->Gaus(0), 0);
 			tr1.SetFreezout(xr1);
 			fMcEvent->AddTrack(tr1);
-		
-		
-		
-			p2.SetXYZM(tracks[1]->GetMomentum().Px()*1000, tracks[1]->GetMomentum().Py()*1000, tracks[1]->GetMomentum().Pz()*1000, e2);
+			
+			
 			tr2.SetMomentum(p1);
-			tr2.SetPdgCode(211);
+			tr2.SetPdgCode(-211);
 			TLorentzVector xr2(gRandom->Gaus(0, 1), gRandom->Gaus(0, 1), gRandom->Gaus(0), 0);
 			tr2.SetFreezout(xr2);
 			fMcEvent->AddTrack(tr2);
 		
-		
 			OTF::RecoTrack rtr1, rtr2;
-			rtr1.SetMom(tracks[0]->GetMomentum()*1000);
+			rtr1.SetMom(tracks[1]->GetMomentum()*1000);
 			//std::cout<<"a"<<(tracks[0]->GetMomentum()*1000).M()<<std::endl;
 			rtr1.SetNHits(5);
 			rtr1.SetCharge(fCharge);
@@ -286,7 +335,7 @@ std::vector<double> v4_val = {0,0.0017,0.0028,0.0033,0.0058,0.0073,0.0089,0.0133
 			which++;
 			fRecoEvent->AddTrack(rtr1);
 		
-			rtr2.SetMom(tracks[1]->GetMomentum()*1000);
+			rtr2.SetMom(tracks[0]->GetMomentum()*1000);
 			//std::cout<<"b"<<(tracks[1]->GetMomentum()*1000).M()<<std::endl;
 			rtr2.SetNHits(5);
 			rtr2.SetCharge(fCharge);
