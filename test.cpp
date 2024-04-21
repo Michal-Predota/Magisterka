@@ -88,31 +88,31 @@ int test()
 	
 	
 	
-	TCanvas* c = new TCanvas("c","c",800,800);
+	/*TCanvas* c = new TCanvas("c","c",800,800);
 	c->cd();
 	
-	TFile* f1 = new TFile("analysis_pim.root");
-	TH1D* experimental = (TH1D*)f1->Get("#pi^{-} p");
+	TFile* f1 = new TFile("results.root");
+	TH1D* experimental = (TH1D*)f1->Get("invmass");
 	experimental->Sumw2(false);
 	//experimental->SetBins(1000, 1000, 2500);
 	
 	
-	//minvhal.root - 30k events
+	//minvhal.root - 10k events
 	int nEvents = 10000;
-	TFile* f2 = new TFile("minvhal_pip_1500bin.root");
+	TFile* f2 = new TFile("bckg_1000bin.root");
 	TH1D* hal = (TH1D*)f2->Get("num");
 	hal->SetLineColor(kRed);
 	
 	
-	TFile* f3 = new TFile("analysis_pim_no_cut.root");
-	TH1D* experimental_nocut = (TH1D*)f3->Get("#pi^{-} p");
-	experimental_nocut->SetLineColor(kGreen);
+//	TFile* f3 = new TFile("analysis_pim_no_cut.root");
+//	TH1D* experimental_nocut = (TH1D*)f3->Get("#pi^{-} p");
+//	experimental_nocut->SetLineColor(kGreen);
 	//experimental_nocut->SetBins(1000, 1000, 2500);
 	
 	
 	
 	experimental->Scale(1/(experimental->Integral()));
-	experimental_nocut->Scale(1/(experimental_nocut->Integral()), "nosw2");
+//	experimental_nocut->Scale(1/(experimental_nocut->Integral()), "nosw2");
 	hal->Scale(1/(hal->Integral()));
 	
 	cout<<hal->GetNbinsX()<<"	"<<experimental->GetNbinsX()<<endl;
@@ -128,21 +128,88 @@ int test()
 	TLegend *legend = new TLegend(0.9,0.9,0.7,0.8);
 	legend->AddEntry(hal,"num", "l");
 	legend->AddEntry(experimental,"pim p", "l");
-	legend->AddEntry(experimental_nocut,"pim p no cuts", "l");
+//	legend->AddEntry(experimental_nocut,"pim p no cuts", "l");
 	
 
 
 	//experimental_nocut->Draw();
-	//experimental->Draw("SAME");
-	//hal->Draw("SAME");
+	hal->Draw("SAME");
+	experimental->Draw("SAME");
 	
-	experimental_nocut->Add(hal, -1);
-	experimental_nocut->Sumw2(false);
-	experimental_nocut->SetLineColor(kBlue);
+//	experimental_nocut->Add(hal, -1);
+//	experimental_nocut->Sumw2(false);
+//	experimental_nocut->SetLineColor(kBlue);
 	
-	experimental_nocut->Draw();
+//	experimental_nocut->Draw();
 	
-	//legend->Draw();
+	legend->Draw();*/
+	
+	
+	
+	
+	
+	TFile* f1 = new TFile("pty_p.root");
+	TFile* f2 = new TFile("pty_pi.root");
+	
+	TFile* f3 = new TFile("analysis_alt.root");
+	TFile* f4 = new TFile("spec_pim.root");
+	
+	TH2D* ptyHAL_p = (TH2D*)f1->Get("pty proton");
+	TH2D* ptyHAL_pi = (TH2D*)f2->Get("pty pion");
+	
+	TH2D* ptyEXP_p = (TH2D*)f3->Get("pty_proton");
+	TH2D* ptyEXP_pi = (TH2D*)f3->Get("pty_pim");
+	
+	ptyHAL_p->Scale(1/(10000*ptyHAL_p->GetXaxis()->GetBinWidth(1)*ptyHAL_p->GetYaxis()->GetBinWidth(1)));
+	ptyHAL_pi->Scale(1/(10000*ptyHAL_pi->GetXaxis()->GetBinWidth(1)*ptyHAL_pi->GetYaxis()->GetBinWidth(1)));
+	
+//	ptyEXP_p->Scale(1/ptyEXP_p->Integral());
+//	ptyEXP_pi->Scale(1/ptyEXP_pi->Integral());
+	
+//	cout<<ptyEXP_pi->GetXaxis()->GetLast()<<endl;
+	
+	//ptyEXP_pi->Draw("colz");
+	
+//	ptyEXP_pi->Divide(ptyHAL_pi);
+//	ptyEXP_pi->Draw("COLZ");
+	
+	
+	
+	
+	TCanvas *cp = new TCanvas("cp","cp",800,800);
+	cp->Divide(1,2);
+	cp->cd(1);
+	ptyHAL_p->Draw("colz");
+	cp->cd(2);
+	ptyEXP_p->DrawCopy("colz");
+	
+	TCanvas *cpi = new TCanvas("cpi","cpi",800,800);
+	cpi->Divide(1,2);
+	cpi->cd(1);
+	ptyHAL_pi->Draw("colz");
+	cpi->cd(2);
+	ptyEXP_pi->DrawCopy("colz");
+	
+	
+	TCanvas *c = new TCanvas("c","c",800,800);
+	c->Divide(1,2);
+	c->cd(1);
+	ptyEXP_pi->Divide(ptyHAL_pi);
+	ptyEXP_pi->SetName("pi_ratio");
+	ptyEXP_pi->SetTitle("exp/HAL pions");
+	ptyEXP_pi->GetYaxis()->SetTitle("pT (MeV)");
+	ptyEXP_pi->GetXaxis()->SetTitle("y");
+	ptyEXP_pi->SetStats(000);
+	ptyEXP_pi->Draw("colz");
+	
+	c->cd(2);
+	ptyEXP_p->Divide(ptyHAL_p);
+	ptyEXP_p->SetName("p_ratio");
+	ptyEXP_p->SetTitle("exp/HAL protons");
+	ptyEXP_p->GetYaxis()->SetTitle("pT (MeV)");
+	ptyEXP_p->GetXaxis()->SetTitle("y");
+	ptyEXP_p->SetStats(000);
+	ptyEXP_p->Draw("colz");
 	
 	
 	return 0;

@@ -98,11 +98,11 @@ void set_curve_params(double pt, int i, TF1* fun, std::vector<double> lim, std::
 	}
 }	
 
-TFile* f1 = new TFile("protons_ratio.root");	
-TFile* f2 = new TFile("pions_ratio.root");
+//TFile* f1 = new TFile("protons_ratio.root");	
+//TFile* f2 = new TFile("pions_ratio.root");
 	
-TH2D* ratio_p = (TH2D*)f1->Get("p_ratio");
-TH2D* ratio_pi = (TH2D*)f2->Get("pi_ratio"); 
+//TH2D* ratio_p = (TH2D*)f1->Get("p_ratio");
+//TH2D* ratio_pi = (TH2D*)f2->Get("pi_ratio"); 
   
 	
 TH1D* dau = new TH1D("dau","dau",500,1000,1800);
@@ -176,23 +176,7 @@ std::vector<double> v6_val = {0,0.0003,0.0001,-0.0009,-0.0016,-0.0010,-0.0014,-0
 		fSpectras->GetRandom2(y, pt);
 	
 		
-	/*	if(pt/1000<=0.2)
-			curve->SetParameter(0, -0.05);
-		else if(0.2<pt/1000<=0.25)
-			curve->SetParameter(0, -0.075);
-		else if(0.25<pt/1000<=0.3)
-			curve->SetParameter(0, -0.09);
-		else if(0.3<pt/1000<=0.35)
-			curve->SetParameter(0, -0.1);
-		else if(0.35<pt/1000<=0.4)
-			curve->SetParameter(0, -0.12);
-		else if(0.4<pt/1000<=0.45)
-			curve->SetParameter(0, -0.14);
-		else if(0.45<pt/1000<=0.8)
-			curve->SetParameter(0, -0.15);
-		else
-			curve->SetParameter(0, -0.2);
-	*/	
+
 		
 		set_curve_params(pt/1000, 0, curve, v1_lim, v1_val);
 		set_curve_params(pt/1000, 1, curve, v2_lim, v2_val);
@@ -214,21 +198,14 @@ std::vector<double> v6_val = {0,0.0003,0.0001,-0.0009,-0.0016,-0.0010,-0.0014,-0
 			Double_t py  = pt * TMath::Sin(phi);
 			Double_t pz  = mt * TMath::SinH(y);
 	
-			 OTF::McTrack tr;
+			OTF::McTrack tr;
 			TLorentzVector p;
 			p.SetXYZM(px, py, pz, fMass);
-			p.Rotate(Psi, TVector3(1,1,1));
+			p.Rotate(Psi, TVector3(1, 1, 1));
 			
 			//std::cout<<ratio_p->GetNbinsX()<<std::endl;
 			
-			/*if(fMass*1000<500)
-			{
-				p*(ratio_pi->GetBinContent(ratio_pi->FindBin(p.Rapidity(), p.Pt())));
-			}
-			if(fMass*1000>500)
-			{
-				p*(ratio_p->GetBinContent(ratio_p->FindBin(p.Rapidity(), p.Pt())));
-			}*/
+			
 			
 			tr.SetMomentum(p);
 			tr.SetPdgCode(fPids);
@@ -267,7 +244,7 @@ std::vector<double> v6_val = {0,0.0003,0.0001,-0.0009,-0.0016,-0.0010,-0.0014,-0
 		
 	int n_deltas=0;
 		
-	while(n_deltas<2)
+	while(n_deltas<5)
 	{
 		Double_t px = gRandom->Gaus(0, 0.5);
 		Double_t py = gRandom->Gaus(0, 0.5);
@@ -283,6 +260,7 @@ std::vector<double> v6_val = {0,0.0003,0.0001,-0.0009,-0.0016,-0.0010,-0.0014,-0
 	
 		else{
 			OTF::McTrack tr1, tr2;
+			OTF::RecoTrack rtr1, rtr2;
 			
 			double e1 = TMath::Sqrt(tracks[0]->GetMomentum().Px()*1000 * tracks[0]->GetMomentum().Px()*1000 + tracks[0]->GetMomentum().Py()*1000 * tracks[0]->GetMomentum().Py()*1000 + tracks[0]->GetMomentum().Pz()*1000 * tracks[0]->GetMomentum().Pz()*1000 + tracks[0]->GetMomentum().M()*1000 * tracks[0]->GetMomentum().M()*1000);
 			double e2 = TMath::Sqrt(tracks[1]->GetMomentum().Px()*1000 * tracks[1]->GetMomentum().Px()*1000 + tracks[1]->GetMomentum().Py()*1000 * tracks[1]->GetMomentum().Py()*1000 + tracks[1]->GetMomentum().Pz()*1000 * tracks[1]->GetMomentum().Pz()*1000 + tracks[1]->GetMomentum().M()*1000 * tracks[1]->GetMomentum().M()*1000);
@@ -294,59 +272,47 @@ std::vector<double> v6_val = {0,0.0003,0.0001,-0.0009,-0.0016,-0.0010,-0.0014,-0
 			p2.SetXYZM(tracks[1]->GetMomentum().Px()*1000, tracks[1]->GetMomentum().Py()*1000, tracks[1]->GetMomentum().Pz()*1000, e2);
 			
 			
-			/*if(p1.M()*1000<500)
-			{
-				p1*(ratio_pi->GetBinContent(ratio_pi->FindBin(p1.Rapidity(), p1.Pt())));
-			}
-			if(p1.M()*1000>500)
-			{
-				p1*(ratio_p->GetBinContent(ratio_p->FindBin(p1.Rapidity(), p1.Pt())));
-			}
-			
-			
-			if(p2.M()*1000<500)
-			{
-				p2*(ratio_pi->GetBinContent(ratio_pi->FindBin(p2.Rapidity(), p2.Pt())));
-			}
-			if(p2.M()*1000>500)
-			{
-				p2*(ratio_p->GetBinContent(ratio_p->FindBin(p2.Rapidity(), p2.Pt())));
-			}*/
-			
 			tr1.SetMomentum(p2);
-			tr1.SetPdgCode(2212);
+			tr1.SetPdgCode(-211);
 			TLorentzVector xr1(gRandom->Gaus(0, 1), gRandom->Gaus(0, 1), gRandom->Gaus(0), 0);
 			tr1.SetFreezout(xr1);
 			fMcEvent->AddTrack(tr1);
 			
-			
-			tr2.SetMomentum(p1);
-			tr2.SetPdgCode(-211);
-			TLorentzVector xr2(gRandom->Gaus(0, 1), gRandom->Gaus(0, 1), gRandom->Gaus(0), 0);
-			tr2.SetFreezout(xr2);
-			fMcEvent->AddTrack(tr2);
-		
-			OTF::RecoTrack rtr1, rtr2;
-			rtr1.SetMom(tracks[1]->GetMomentum()*1000);
-			//std::cout<<"a"<<(tracks[0]->GetMomentum()*1000).M()<<std::endl;
-			rtr1.SetNHits(5);
-			rtr1.SetCharge(fCharge);
-			rtr1.SetMcIndex(which + tmp);
-			which++;
-			fRecoEvent->AddTrack(rtr1);
-		
-			rtr2.SetMom(tracks[0]->GetMomentum()*1000);
+			rtr2.SetMom(tracks[1]->GetMomentum()*1000);
 			//std::cout<<"b"<<(tracks[1]->GetMomentum()*1000).M()<<std::endl;
 			rtr2.SetNHits(5);
 			rtr2.SetCharge(fCharge);
 			rtr2.SetMcIndex(which + tmp);
 			fRecoEvent->AddTrack(rtr2);
-			//std::cout<<n_deltas<<std::endl;
+			//std::cout<<"tmp	"<<tmp<<std::endl;
+			//std::cout<<"which	"<<which<<std::endl;
+			//std::cout<<which + tmp<<std::endl;
 			
+			which++;
+			//std::cout<<tracks[0]->GetMomentum().M()<<std::endl;
+			
+			//tracks[0]=proton, tracks[1]=pion
+			
+			tr2.SetMomentum(p1);
+			tr2.SetPdgCode(2212);
+			TLorentzVector xr2(gRandom->Gaus(0, 1), gRandom->Gaus(0, 1), gRandom->Gaus(0), 0);
+			tr2.SetFreezout(xr2);
+			fMcEvent->AddTrack(tr2);
+			
+			rtr1.SetMom(tracks[0]->GetMomentum()*1000);
+			//std::cout<<"a"<<(tracks[0]->GetMomentum()*1000).M()<<std::endl;
+			rtr1.SetNHits(5);
+			rtr1.SetCharge(fCharge);
+			rtr1.SetMcIndex(which + tmp);
+			fRecoEvent->AddTrack(rtr1);
+			//std::cout<<"tmp	"<<tmp<<std::endl;
+			//std::cout<<"which	"<<which<<std::endl;
+			//std::cout<<which + tmp<<std::endl;
+			which++;
 			
 			n_deltas++;
-			tmp=tmp+which;
-		
+		//	tmp=tmp+which;
+			
 			//std::cout<<((tracks[0]->GetMomentum()+tracks[1]->GetMomentum()).M()*1000)<<std::endl;	
 		}
 	}

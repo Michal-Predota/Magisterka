@@ -83,13 +83,7 @@ TH2D* ratio_p = (TH2D*)f1->Get("p_ratio");
 TH2D* ratio_pi = (TH2D*)f2->Get("pi_ratio"); 
   */
  virtual void ProcessPair() {  // wywoływane dla każdej pary zwykłej
- 
- //TCanvas *mydummycanvas=new TCanvas();
 
-
-
-	//cout<<ratio_pi->GetNbinsX()<<endl;
- 
 	Double_t minv;
 	Double_t weight;
     TLorentzVector mom1 = fCurrentSignalPair->GetTrack1()->GetMomentum();
@@ -98,52 +92,23 @@ TH2D* ratio_pi = (TH2D*)f2->Get("pi_ratio");
 	//cout<<mom2.M()<<endl;
 	
 	
-	//if(TMath::Abs(mom1.M()-mom2.M())>1)
-	//{
-		/*
-		if(mom1.M()<500)
-			mom1*(ratio_pi->GetBinContent(ratio_pi->FindBin(mom1.Rapidity(), mom1.Pt())));
-		if(mom1.M()>500)
-			mom1*(ratio_p->GetBinContent(ratio_p->FindBin(mom1.Rapidity(), mom1.Pt())));
+	
 		
-		if(mom2.M()<500)
-			mom2*(ratio_pi->GetBinContent(ratio_pi->FindBin(mom2.Rapidity(), mom2.Pt())));
-		if(mom2.M()>500)
-			mom2*(ratio_p->GetBinContent(ratio_p->FindBin(mom2.Rapidity(), mom2.Pt())));
-		*/
 		minv       = (mom1 + mom2).M();
 		weight     = fFlow->GenerateWeight(fCurrentSignalPair);
 	
-		fMinvNum->Fill(minv, weight);
-		//cout<<minv<<endl;
-		
-	//	if(fCurrentSignalPair->GetTrack1()->GetMomentum().M()<200)
-		//{
+		if(mom1.Rapidity()>0 && mom2.Rapidity()>0)
+			fMinvNum->Fill(minv, weight);
+		if(mom2.Rapidity()>0)
+		{
 			phi_pion->Fill(fCurrentSignalPair->GetTrack2()->GetMomentum().Phi());
 			pty_pion->Fill(fCurrentSignalPair->GetTrack2()->GetMomentum().Rapidity(), fCurrentSignalPair->GetTrack1()->GetMomentum().Pt());
-		//}
-		
-		//if(fCurrentSignalPair->GetTrack2()->GetMomentum().M()<200)
-	//	{
-			phi_pion->Fill(fCurrentSignalPair->GetTrack1()->GetMomentum().Phi());
-			pty_pion->Fill(fCurrentSignalPair->GetTrack1()->GetMomentum().Rapidity(), fCurrentSignalPair->GetTrack1()->GetMomentum().Pt());
-	//	}
-		
-		/*if(fCurrentSignalPair->GetTrack2()->GetMomentum().M()>200)
-		{
-			phi_proton->Fill(fCurrentSignalPair->GetTrack2()->GetMomentum().Phi());
-			pty_proton->Fill(fCurrentSignalPair->GetTrack2()->GetMomentum().Rapidity(), fCurrentSignalPair->GetTrack2()->GetMomentum().Pt());
 		}
-		
-		if(fCurrentSignalPair->GetTrack1()->GetMomentum().M()>200)
+		if(mom1.Rapidity()>0)
 		{
 			phi_proton->Fill(fCurrentSignalPair->GetTrack1()->GetMomentum().Phi());
 			pty_proton->Fill(fCurrentSignalPair->GetTrack1()->GetMomentum().Rapidity(), fCurrentSignalPair->GetTrack1()->GetMomentum().Pt());
-		}*/
-	//}
-	
-//	f1->Close();
-	//f2->Close();
+		}
 	
   }
   
@@ -154,15 +119,15 @@ TH2D* ratio_pi = (TH2D*)f2->Get("pi_ratio");
     TLorentzVector mom1 = fCurrentBackgroundPair->GetTrack1()->GetMomentum();
     TLorentzVector mom2 = fCurrentBackgroundPair->GetTrack2()->GetMomentum();
 	
-	if(TMath::Abs(mom1.M()-mom2.M())>1)
-	{
+	//if(TMath::Abs(mom1.M()-mom2.M())>1)
+	//{
 		minv       = (mom1 + mom2).M();
 		
 		//std::cout<<minv<<std::endl;
 		weight     = fFlow->GenerateWeight(fCurrentSignalPair);
 	
 		fMinvDen->Fill(minv);
-	}
+//	}
 	
   }
 
@@ -186,14 +151,14 @@ void minflow() {
   Hal::AnalysisManager* run = new Hal::AnalysisManager();
   HalOTF::Source* source    = new HalOTF::Source(10000);
   /**wczytywanie spektr i ich ustawianie**/
-  TString path = "spec_pim.root";
+  TString path = "analysis_alt.root";
   TFile* fx    = new TFile(path);
-  TFile *fp = new TFile("spec_p.root");
+ // TFile *fp = new TFile("spec_p.root");
   
   auto w       = new FlowGenerator();
   w->SetFlow(0.4);
-  TH2D* h                = (TH2D*) fx->Get("HALpim");
-  TH2D *hp = (TH2D*) fp->Get("HALp");
+  TH2D* h  = (TH2D*) fx->Get("pty_pim");
+  TH2D *hp = (TH2D*) fx->Get("pty_proton");
   
   
 
